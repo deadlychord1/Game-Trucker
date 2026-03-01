@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<title>Game Tracker — Вход и Регистрация</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<style>
+body { background:#0f172a; color:#f1f5f9; font-family:sans-serif; margin:0; padding:20px; }
+h1 { text-align:center; margin-bottom:20px; }
+.tabs button { background:#38bdf8; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; margin-right:10px; font-weight:bold; }
+.tabs button.active { background:#0f172a; color:#38bdf8; }
+#authArea { margin-top:20px; display:flex; gap:10px; }
+#userInfo { margin-top:10px; font-weight:bold; }
+#mainContent { margin-top:30px; max-width:400px; margin-left:auto; margin-right:auto; }
+#loginSection, #registerSection { display:none; }
+input { display:block; margin-bottom:10px; padding:8px; width:100%; border:none; border-radius:6px; background:#334155; color:#fff; }
+button { padding:8px 16px; border:none; border-radius:6px; background:#38bdf8; cursor:pointer; font-weight:bold; margin-top:10px; }
+</style>
+</head>
+<body>
+
+<h1>🎮 Игровой трекер</h1>
+<div class="tabs">
+  <button id="tabLogin" class="active" onclick="showLogin()">Вход</button>
+  <button id="tabRegister" onclick="showRegister()">Регистрация</button>
+</div>
+
+<div id="authArea"><button onclick="showLogin()">Войти</button></div>
+<div id="userInfo"></div>
+
+<div id="mainContent">
+  <div id="loginSection">
+    <h3>Войти в систему</h3>
+    <input type="email" id="loginEmail" placeholder="Email" />
+    <input type="password" id="loginPassword" placeholder="Пароль" />
+    <button onclick="podlog()">Войти</button>
+  </div>
+  <div id="registerSection">
+    <h3>Зарегистрироваться</h3>
+    <input type="email" id="registerEmail" placeholder="Email" />
+    <input type="text" id="registerNick" placeholder="Ваш ник" />
+    <input type="password" id="registerPassword" placeholder="Пароль" />
+    <button onclick="podreg()">Зарегистрироваться</button>
+  </div>
+</div>
+
+<!-- Админская панель -->
+<div id="adminSection" style="display:none;">
+  <h2>👑 Админ-панель</h2>
+  <button onclick="logout()">Выйти</button>
+  <h3>Добавить игру</h3>
+  <input type="text" id="newGameName" placeholder="Название игры" />
+  <input type="number" id="newGameRating" placeholder="Оценка 1-10" min="1" max="10" />
+  <select id="newGameStatus">
+    <option value="Пройдено">Пройдено</option>
+    <option value="В процессе">В процессе</option>
+    <option value="В планах">В планах</option>
+  </select>
+  <label>Картинка к игре:</label>
+  <input type="file" id="newGameImage" accept="image/*" />
+  <button class="btn" onclick="addGame()">Добавить игру</button>
+  <h3>Удалить игру</h3>
+  <div id="gameList"></div>
+  <h3>Модерация отзывов</h3>
+  <div id="reviewModeration"></div>
+</div>
+
+<h2>🎮 Игры</h2>
+<div id="gamesDisplay"></div>
+
+<script>
+  // ВАШИ ключи Firebase — вставлены сюда
+  const firebaseConfig = {
+    apiKey: "AIzaSyCeQmPBVXyoJdfwZRoINJonFmPMmrBGH30",
+    authDomain: "mygametracker-44a38.firebaseapp.com",
+    projectId: "mygametracker-44a38",
+    storageBucket: "mygametracker-44a38.firebasestorage.app",
+    messagingSenderId: "756062929019",
+    appId: "1:756062929019:web:7c484a6d691f441a2fe2de",
+    measurementId: "G-1JQYS1VV4L"
+  };
+
+  // Инициализация Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const storage = firebase.storage();
+
+  const ADMIN_EMAIL = "werkerc196@gmail.com";
+
+  let isAdmin = false;
+
+  auth.onAuthStateChanged(u => {
+    if (u) {
+      localStorage.setItem('siteUser', JSON.stringify({email: u.email, nick: u.displayName || u.email}));
+      if (u.email === ADMIN_EMAIL) {
+        loginAsAdmin();
+      } else {
+        loginAsUser(u.displayName || u.email);
+      }
+    } else {
+      localStorage.removeItem('siteUser');
+      showLogin();
+    }
+    loadMyPage();
+  });
+
+  function showLogin() {
+    document.getElementById('tabLogin').classList.add('active');
+    document.getElementById('tabRegister').classList.remove('active');
+    document.getElementById('loginSection').style.display='block';
+    document.getElementById('registerSection').style.display='none';
+    document.getElementById('adminSection').style.display='none';
+  }
+
+  function showRegister() {
+    document.getElementById('tabLogin').classList.remove('active');
+    document.getElementById('tabRegister').classList.add('active');
+    document.getElementById('loginSection').style.display='none';
+    document.getElementById('registerSection').style.display='block';
+    document.getElementById('adminSection').style.display='none';
+  }
+
+  async function podlog() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPassword').value.trim();
+    try {
+      await auth.signInWithEmailAndPassword(email, pass);
+    } catch(e) { alert('Ошибка: ' + e.message); }
+  }
+
+  async function podreg() {
+    const email = document.getElementById('registerEmail').value.trim();
+    const nick = document.getElementById('registerNick').value.trim();
+    const pass = document.getElementById('registerPassword').value.trim();
+    try {
+      const u = await auth.createUserWithEmailAndPassword(email, pass);
+      await u.user.updateProfile({ displayName: nick });
+      localStorage.setItem('siteUser', JSON.stringify({ email, nick }));
+    } catch(e) { alert('Ошибка: ' + e.message); }
+  }
+
+  function loginAsUser(nick) {
+    isAdmin = false;
+    document.getElementById('authArea').innerHTML=`<button onclick="showLogin()">Выйти</button>`;
+    document.getElementById('userInfo').innerHTML='Вы вошли как: <b>'+ (nick||'пользователь') +'</b>';
+    loadMyPage();
+  }
+
+  function loginAsAdmin() {
+    isAdmin = true;
+    document.getElementById('authArea').innerHTML=`<button onclick="logout()">Выйти</button>`;
+    document.getElementById('userInfo').innerHTML='Вы вошли как <b>Админ</b>';
+    loadAdminPanel();
+    loadGames();
+  }
+
+  async function logout() {
+    await auth.signOut();
+    localStorage.removeItem('siteUser');
+    loadMyPage();
+  }
+
+  async function loadMyPage() {
+    // Загрузка игр
+    await loadGames();
+    if (isAdmin) loadAdminPanel();
+    else loadUserReviewForm();
+  }
+
+  async function loadGames() {
+    const snap = await db.collection('games').get();
+    document.getElementById('gamesDisplay').innerHTML='';
+    snap.forEach(doc => {
+      const g = {id: doc.id, ...doc.data()};
+      let imgHtml='';
+      if (g.imageUrl) imgHtml=`<div class="gameImage"><img src="${g.imageUrl}" /></div>`;
+      document.getElementById('gamesDisplay').innerHTML+=`
+        <div class="gameCard">
+          ${imgHtml}
+          <h3>${g.name}</h3>
+          <p><b>⭐${g.rating}/10</b>, ${g.status}</p>
+        </div>`;
+    });
+    // Обновляем список для отзывов
+    const sel = document.getElementById('reviewGameSelect');
+    const docs = await db.collection('games').get();
+    sel.innerHTML='<option value="">Выберите игру</option>';
+    docs.forEach(g => {
+      const data = g.data();
+      sel.innerHTML+=`<option value="${g.id}">${data.name}</option>`;
+    });
+  }
+
+  async function loadAdminPanel() {
+    if (!isAdmin) return;
+    const snap = await db.collection('reviews').where('status','==','pending').get();
+    document.getElementById('reviewModeration').innerHTML='';
+    if (snap.empty) {
+      document.getElementById('reviewModeration').innerHTML='Нет отзывов на модерации.';
+    } else {
+      snap.forEach(r => {
+        const d = r.data();
+        document.getElementById('reviewModeration').innerHTML+=`
+          <div>📝 ${d.userNick}: <b>${d.rate}</b>/10 (${d.back})</div>
+          <button onclick="approveRev('${r.id}')">✓ Одобрить</button>
+          <button onclick="rejectRev('${r.id}')">✗ Удалить</button><hr>`;
+      });
+    }
+  }
+
+  window.approveRev = async (id) => {
+    await db.collection('reviews').doc(id).update({status:'approved'});
+    loadAdminPanel();
+    loadGames();
+  }
+  window.rejectRev = async (id) => {
+    await db.collection('reviews').doc(id).delete();
+    loadAdminPanel();
+  }
+
+  async function deleteGame(id) {
+    if (confirm('Удалить игру?')) {
+      await db.collection('games').doc(id).delete();
+      const revs = await db.collection('reviews').where('gameId','==',id).get();
+      for (const r of revs.docs) await db.collection('reviews').doc(r.id).delete();
+      loadGames(); loadAdminPanel();
+    }
+  }
+
+  async function addGame() {
+    const name = document.getElementById('newGameName').value.trim();
+    const rating = parseInt(document.getElementById('newGameRating').value);
+    const status = document.getElementById('newGameStatus').value;
+    const imageFile = document.getElementById('newGameImage').files[0];
+
+    if (!name || !rating) return alert('Заполните всё');
+    let imageUrl='';
+    if (imageFile) {
+      const ref = storage.ref().child('game_images/'+Date.now()+'.jpg');
+      await ref.put(imageFile);
+      imageUrl=await ref.getDownloadURL();
+    }
+    await db.collection('games').add({name, rating, status, imageUrl});
+    document.getElementById('newGameName').value=''; 
+    document.getElementById('newGameRating').value=''; 
+    loadGames();
+    loadAdminPanel();
+  }
+
+  async function submitUserReview() {
+    const gameId = document.getElementById('reviewGameSelect').value;
+    const rate = document.getElementById('reviewRating').value;
+    const back = document.getElementById('reviewBack').value;
+    const user = JSON.parse(localStorage.getItem('siteUser'));
+    if (!gameId || !rate || !user) return alert('Заполните всё');
+    await db.collection('reviews').add({
+      gameId, rate, back, userNick: user.nick || user.email, status:'pending', created: new Date()
+    });
+    alert('Отзыв отправлен на модерацию!');
+    document.getElementById('reviewRating').value='';
+    document.getElementById('reviewGameSelect').value='';
+  }
+
+  function loadUserReviewForm() {
+    document.getElementById('reviewForm').style.display='block';
+    loadGames();
+  }
+</script>
