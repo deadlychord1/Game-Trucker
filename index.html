@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Tracker - Игровой список</title>
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f1f5f9; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .auth-box { background: var(--card); padding: 15px; border-radius: 12px; display: flex; gap: 10px; }
+        .btn { cursor: pointer; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; background: var(--accent); color: var(--bg); }
+        .btn-secondary { background: #475569; color: white; }
+        .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .game-card { background: var(--card); border-radius: 15px; padding: 20px; border: 1px solid #334155; }
+        .rating { color: #fbbf24; font-weight: bold; }
+        .status { font-size: 0.85rem; padding: 4px 8px; border-radius: 4px; background: #334155; }
+        .user-review { margin-top: 15px; padding-top: 15px; border-top: 1px solid #334155; font-size: 0.9rem; }
+        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--card); padding: 30px; border-radius: 15px; border: 1px solid var(--accent); display: none; z-index: 100; }
+        input { background: #0f172a; border: 1px solid #334155; color: white; padding: 8px; border-radius: 5px; margin-bottom: 10px; width: 100%; box-sizing: border-box; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🎮 Список игр</h1>
+        <div id="authSection" class="auth-box">
+            <!-- Сюда вставится либо кнопка входа, либо ник пользователя -->
+        </div>
+    </div>
+
+    <div id="reviewStage" class="hidden">
+        <div class="game-card" style="margin-bottom: 30px; border-color: var(--accent);">
+            <h3>📝 Оставить отзыв</h3>
+            <select id="revGame" style="width: 100%; padding: 8px; margin-bottom: 10px; background: #0f172a; color: white; border-radius: 5px;">
+                <option value="">Выберите игру из списка...</option>
+            </select>
+            <input type="number" id="revRate" placeholder="Ваша оценка (1-10)" min="1" max="10">
+            <select id="revBack" style="width: 100%; padding: 8px; margin-bottom: 15px; background: #0f172a; color: white; border-radius: 5px;">
+                <option value="yes">Вернусь в игру</option>
+                <option value="no">Не вернусь</option>
+                <option value="maybe">Возможно</option>
+            </select>
+            <button class="btn" onclick="submitReview()">Отправить (будет видно после проверки)</button>
+        </div>
+    </div>
+
+    <div id="gameDisplay" class="games-grid">
+        <!-- Игры загрузятся сюда -->
+    </div>
+</div>
+
+<!-- Модалка регистрации -->
+<div id="regModal" class="modal">
+    <h3>Регистрация</h3>
+    <input type="email" id="regEmail" placeholder="Email">
+    <input type="text" id="regNick" placeholder="Придумайте Ник">
+    <input type="password" id="regPass" placeholder="Пароль">
+    <button class="btn" onclick="register()">Создать аккаунт</button>
+    <button class="btn-secondary" onclick="closeModal()">Закрыть</button>
+</div>
+
+<script>
+    let games = JSON.parse(localStorage.getItem('games')) || [];
+    let reviews = JSON.parse(localStorage.getItem('reviews')) || [];
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+
+    function render() {
+        // Рендерим блок авторизации
+        const authSec = document.getElementById('authSection');
+        if (currentUser) {
+            authSec.innerHTML = `<span>Привет, <b>${currentUser.nick}</b></span> <button class="btn-secondary" onclick="logout()">Выйти</button>`;
+            document.getElementById('reviewStage').classList.remove('hidden');
+            
+            const sel = document.getElementById('revGame');
+            sel.innerHTML = '<option value="">Выберите игру...</option>' + 
+                games.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+        } else {
+            authSec.innerHTML = `<button class="btn" onclick="openModal()">Регистрация / Вход</button>`;
+            document.getElementById('reviewStage').classList.add('hidden');
+        }
+
+        // Рендерим игры
+        const grid = document.getElementById('gameDisplay');
+        grid.innerHTML = games.map(g => {
+            // Ищем одобренные отзывы для этой игры
+            const approvedReviews = reviews.filter(r => r.gameId === g.id && r.status === 'approved');
+            return `
+                <div class="game-card">
+                    <h3>${g.name}</h3>
+                    <p><span class="rating">⭐ ${g.rating}/10</span> <span class="status">${g.status}</span></p>
+                    ${approvedReviews.map(r => `
+                        <div class="user-review">
+                            <b>${r.userNick}:</b> ${r.rate}/10 (${r.back})
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function openModal() { document.getElementById('regModal').style.display='block'; }
+    function closeModal() { document.getElementById('regModal').style.display='none'; }
+
+    function register() {
+        const email = document.getElementById('regEmail').value;
+        const nick = document.getElementById('regNick').value;
+        const pass = document.getElementById('regPass').value;
+        if(!email || !nick || !pass) return alert('Заполните всё!');
+        
+        let user = users.find(u => u.email === email);
+        if(!user) {
+            user = {email, nick, pass};
+            users.push(user);
+            localStorage.setItem('users', JSON.stringify(users));
+        } else if(user.pass !== pass) {
+            return alert('Неверный пароль');
+        }
+        
+        currentUser = user;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        closeModal();
+        render();
+    }
+
+    function logout() {
+        localStorage.removeItem('currentUser');
+        location.reload();
+    }
+
+    function submitReview() {
+        const gameId = document.getElementById('revGame').value;
+        const rate = document.getElementById('revRate').value;
+        const back = document.getElementById('revBack').value;
+        if(!gameId || !rate) return alert('Заполните данные!');
+
+        const newReview = {
+            id: Date.now(),
+            gameId: parseInt(gameId),
+            userNick: currentUser.nick,
+            rate: rate,
+            back: back,
+            status: 'pending' // Ожидает вашей проверки!
+        };
+
+        reviews.push(newReview);
+        localStorage.setItem('reviews', JSON.stringify(reviews));
+        alert('Отзыв отправлен! Он появится после проверки админом.');
+        document.getElementById('revRate').value = '';
+    }
+
+    render();
+</script>
+</body>
+</html>
