@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
 <meta charset="UTF-8" />
 <title>Игровой трекер | Регистрация и вход</title>
@@ -8,21 +9,121 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 <style>
-body { background:#2b2d42; font-family:sans-serif; margin:0; padding:20px; color:#fff; }
-h1 { text-align:center; margin-bottom:15px; }
-.menu { display:flex; justify-content: center; gap:12px; margin-bottom:20px; }
-button { border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1rem; background:#00b894; color:#fff; transition: background 0.3s; }
-button:hover { background:#019778; }
-#authButtons { margin-top:10px; display:flex; justify-content: center; gap:10px; }
-input, select { display:block; width:250px; margin:10px auto; padding:8px; border:none; border-radius:6px; background:#4ecca3; color:#222; }
-#content { max-width:960px; margin:0 auto; }
-#games { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:16px; margin-top:20px; }
-.game { background:#3b3e49; padding:15px; border-radius:8px; border:2px solid #222; overflow:hidden; }
-.game img { width:100%; border-radius:4px; margin-bottom:10px; max-height:200px; object-fit:cover; }
-#reviewBox { margin-top:20px; }
-#reviews { margin-top:20px; max-height:300px; overflow-y:auto; }
+body {
+  background: #2b2d42;
+  font-family: sans-serif;
+  margin: 0;
+  padding: 20px;
+  color: #fff;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.menu {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+button {
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  background: #00b894;
+  color: #fff;
+  transition: background 0.3s;
+}
+button:hover {
+  background: #019778;
+}
+
+#authButtons {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+input,
+select {
+  display: block;
+  width: 250px;
+  margin: 10px auto;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  background: #4ecca3;
+  color: #222;
+}
+
+#content {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+#games {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.game {
+  background: #3b3e49;
+  padding: 15px;
+  border-radius: 8px;
+  border: 2px solid #222;
+  overflow: hidden;
+}
+
+.game img {
+  width: 100%;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  max-height: 200px;
+  object-fit: cover;
+}
+
+#reviewBox {
+  margin-top: 20px;
+}
+
+#reviews {
+  margin-top: 20px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#modalOverlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+#modal {
+  background: #222;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 300px;
+  text-align: center;
+  color: #fff;
+}
 </style>
 </head>
+
 <body>
 
 <h1>🎮 Мой игровой трекер</h1>
@@ -39,7 +140,6 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
     <button onclick="logout()">Выйти</button>
   </div>
 
-  <!-- Админская панель -->
   <div id="adminPanel" style="display:none; background:#222; padding:15px; border-radius:10px; margin-bottom:20px;">
     <h3>👑 Админка</h3>
     <button onclick="logout()">Выйти из админки</button>
@@ -47,7 +147,9 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
     <input type="text" id="gameName" placeholder="Название игры" />
     <input type="number" id="gameRating" placeholder="Рейтинг 1-10" min="1" max="10" />
     <select id="gameStatus">
-      <option>Пройдено</option><option>В процессе</option><option>В планах</option>
+      <option>Пройдено</option>
+      <option>В процессе</option>
+      <option>В планах</option>
     </select>
     <br><br>
     <label>Картинка к игре:</label>
@@ -60,12 +162,10 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
     <div id="reviewsModeration"></div>
   </div>
 
-  <!-- Основной список игр -->
   <h3>Игры</h3>
   <div id="games"></div>
 
-  <!-- Оставить отзыв -->
-  <div id="reviewBox" style="margin-top:20px; display:none;">
+  <div id="reviewBox" style="margin-top:20px;">
     <h4>Оставить отзыв</h4>
     <select id="reviewGame"></select>
     <input type="number" id="reviewRating" placeholder="Оценка 1-10" min="1" max="10" />
@@ -74,13 +174,13 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
       <option value="no">Не вернусь</option>
       <option value="maybe">Возможно</option>
     </select>
+    <br><br>
     <button onclick="submitReview()">Отправить</button>
   </div>
 </div>
 
-<!-- Всплывающее окно входа -->
-<div id="modalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:999;">
-  <div style="background:#222; padding:20px; border-radius:10px; max-width:300px; text-align:center; color:#fff;">
+<div id="modalOverlay">
+  <div style="background:#222; padding:20px; border-radius:10px; max-width:300px;">
     <h4>Введите свои данные</h4>
     <input type="email" id="modalEmail" placeholder="Email" />
     <input type="password" id="modalPassword" placeholder="Пароль" />
@@ -91,7 +191,6 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
 </div>
 
 <script>
-  // ВАШИ ключи Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyCeQmPBVXyoJdfwZRoINJonFmPMmrBGH30",
     authDomain: "mygametracker-44a38.firebaseapp.com",
@@ -106,7 +205,6 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
   const db = firebase.firestore();
   const storage = firebase.storage();
 
-  // ваш email - замените, чтобы он совпадал
   const ADMIN_EMAIL = "werker196@gmail.com";
 
   let isAdmin = false;
@@ -159,7 +257,7 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
       const u = await auth.createUserWithEmailAndPassword(email, pass);
       await u.user.updateProfile({ displayName: nick });
       localStorage.setItem('siteUser', JSON.stringify({email, nick}));
-      alert('Регистрация успешна! Войдите.');
+      alert('Регистрация прошла успешно! Войдите.');
     } catch(e){ alert('Ошибка: ' + e.message); }
   }
 
@@ -201,29 +299,29 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
     document.getElementById('games').innerHTML='';
     snap.forEach(doc => {
       const g = {id: doc.id, ...doc.data()};
-      let img = g.imageUrl ? `<img src="${g.imageUrl}" />` : '';
+      let img=`${g.imageUrl ? `<img src="${g.imageUrl}" />` : ''}`;
       document.getElementById('games').innerHTML+=`
-        <div class="game" style="background:#4e607f;">
-          ${img}
+        <div class="game" style="background:#4e607f;">${img}
           <h4>${g.name}</h4>
           <p>⭐${g.rating}/10, ${g.status}</p>
         </div>`;
     });
-    // Обновление селекта отзывов
+    // обновляем селект для отзывов
     const sel = document.getElementById('reviewGame');
     sel.innerHTML='<option value="">Выберите игру</option>';
     const docs = await db.collection('games').get();
     docs.forEach(g => {
-      const data = g.data();
+      const data=g.data();
       sel.innerHTML+=`<option value="${g.id}">${data.name}</option>`;
     });
   }
 
   async function loadAdminTools() {
-    if (!(await auth.currentUser).email === ADMIN_EMAIL) return; 
+    const user = await auth.currentUser;
+    if (user.email !== 'werker196@gmail.com') return; 
     // отзывы на модерации
     const snap = await db.collection('reviews').where('status','==','pending').get();
-    document.getElementById('reviewsModeration').innerHTML='';
+    document.getElementById('reviewsModeration').innerHTML=''; 
     if (snap.empty) {
       document.getElementById('reviewsModeration').innerHTML='Нет отзывов на модерации.';
     } else {
@@ -239,7 +337,7 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
     const docs = await db.collection('games').get();
     document.getElementById('gameList').innerHTML='';
     docs.forEach(g => {
-      const data = g.data();
+      const data=g.data();
       document.getElementById('gameList').innerHTML+=`✔️ ${data.name} <button onclick="deleteGame('${g.id}')">Удалить</button><br>`;
     });
   }
@@ -295,8 +393,14 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
   }
 
   function loadUserReviews() { /* отзывы показываются после одобрения */ }
+
+  // Функции показать/скрыть модальное окно
+  function showModal() {
+    document.getElementById('modalOverlay').style.display='flex';
+  }
+  function closeModal() {
+    document.getElementById('modalOverlay').style.display='none';
+  }
 </script>
 
-
-</script>
 
