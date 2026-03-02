@@ -3,27 +3,25 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Игровой трекер | Продвинутый дизайн</title>
+<title>Игровой трекер</title>
 <!-- Шрифты и иконки для красоты -->
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
 <style>
 body {
   margin: 0;
   font-family: 'Roboto', sans-serif;
   background: linear-gradient(135deg, #1f1c2c, #928dab);
-  color: #fff;
-  overflow-x: hidden;
+  color:#fff;
+  min-height: 100vh;
+  padding: 20px;
 }
 
-/* header */
 h1 {
   text-align: center;
-  padding: 20px;
+  margin-bottom: 20px;
   font-size: 2.5rem;
 }
 
-/* menu */
 .menu {
   display: flex;
   justify-content: center;
@@ -31,7 +29,7 @@ h1 {
   margin-bottom: 20px;
 }
 
-/* кнопки */
+/* Кнопки */
 button {
   background-color: #ff6f61;
   border: none;
@@ -47,25 +45,52 @@ button:hover {
   transform: translateY(-2px);
 }
 
-/* стили для контента */
-#content {
-  max-width: 1000px;
-  margin: 0 auto 40px auto;
-  padding: 0 20px;
+/* Контент и формы */
+#authSection {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
 }
-
-/* карточки игр */
+#authForms {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 400px;
+  margin: 0 auto;
+}
+#authForms > div {
+  display: none;
+  width: 100%;
+  background: rgba(255,255,255,0.1);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+#authForms > div.active {
+  display: block;
+}
+#authForms input {
+  width: 100%;
+  margin: 8px 0;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  font-family: 'Roboto', sans-serif;
+}
+#content {
+  max-width: 1024px;
+  margin: 0 auto 40px auto;
+}
 #games {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
 }
 .game {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255,255,255,0.1);
   border-radius: 12px;
-  overflow: hidden;
   padding: 15px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .game:hover {
@@ -79,85 +104,63 @@ button:hover {
   border-radius: 8px;
   margin-bottom: 10px;
 }
-
-/* отзывы и админка */
 #adminPanel {
-  background-color: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.1);
   border-radius: 12px;
   padding: 20px;
   margin-top: 30px;
 }
-.section-title {
-  font-size: 1.5rem;
+h4 {
   margin-top: 20px;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 #gameListAdmin, #reviewsModeration {
   max-height: 250px;
   overflow-y: auto;
+  margin-top: 10px;
   padding: 10px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 8px;
 }
 #gameListAdmin div, #reviewsModeration div {
   margin-bottom: 10px;
 }
-/* формы */
 #addGameForm, #editGameForm {
-  background-color: rgba(255,255,255,0.15);
-  border-radius: 12px;
-  padding: 15px;
   margin-top: 15px;
+  padding: 15px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 12px;
 }
 #addGameForm input[type=text], #addGameForm input[type=number], #editGameForm input[type=text], #editGameForm input[type=number] {
   width: calc(50% - 10px);
-  margin: 10px 10px 10px 0;
+  margin: 8px 10px;
   padding: 8px;
+  border-radius: 6px;
+  border: none;
+}
+#saveGameBtn, #saveEditedBtn, #cancelEditBtn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 12px;
   border: none;
   border-radius: 6px;
-  font-family: 'Roboto', sans-serif;
+  font-weight: bold;
+  cursor: pointer;
 }
-#addGameForm label, #editGameForm label {
-  display: block;
-  margin-top: 10px;
-}
-#saveGameBtn {
-  background-color: #4CAF50;
-  margin-top: 15px;
-  width: 100%;
-}
-#saveEditedBtn {
-  background-color: #2196F3;
-  margin-top: 15px;
-  width: 48%;
-}
-#cancelEditBtn {
-  background-color: #f44336;
-  margin-top: 15px;
-  width: 48%;
-}
+#saveGameBtn { background: #4CAF50; color: #fff; }
+#saveEditedBtn { background: #2196F3; color: #fff; }
+#cancelEditBtn { background: #f44336; color: #fff; }
 </style>
 </head>
 <body>
 
 <h1>🎮 Мой расширенный игровой трекер</h1>
 
-<div class="menu">
+<!-- Кнопка для входа/регистрации -->
+<div id="authSection">
   <button onclick="showAuth()">Войти / Регистрация</button>
 </div>
 
-<!-- Варианты авторизации -->
-<div id="authButtons">
-  <button onclick="showLoginForm()">Вход</button>
-  <button onclick="showRegisterForm()">Регистрация</button>
-</div>
-
 <!-- Формы входа и регистрации -->
-<div id="authFormContainer" style="display:none; margin-top:20px;">
-  <div id="loginForm" style="display:none;">
+<div id="authForms" style="display:none;">
+  <div id="loginForm">
     <h3>Войти</h3>
     <input type="email" id="loginEmail" placeholder="Email" />
     <input type="password" id="loginPassword" placeholder="Пароль" />
@@ -173,50 +176,39 @@ button:hover {
   <button onclick="hideAuth()">Отмена</button>
 </div>
 
-<!-- Модальное окно для входа по модулю -->
-<div id="modalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:999;">
-  <div style="background:#222; padding:20px; border-radius:10px; max-width:300px; width:90%;">
-    <h4>Введите свои данные</h4>
-    <input type="email" id="modalEmail" placeholder="Email" />
-    <input type="password" id="modalPassword" placeholder="Пароль" />
-    <br>
-    <button onclick="modalLogin()">Войти</button>
-    <button onclick="closeModal()">Отмена</button>
-  </div>
-</div>
-
-<!-- Основной контент -->
+<!-- Основной контент после входа -->
 <div id="content" style="display:none;">
-  <div id="userPanel">
-    <p>Вы вошли как: <b id="userEmail"></b></p>
-    <button onclick="logout()">Выйти</button>
-  </div>
+  <p>Вы вошли как: <b id="userEmail"></b></p>
+  <button onclick="logout()">Выйти</button>
 
-  <!-- Админка --> 
+  <!-- Админская панель -->
   <div id="adminPanel" style="display:none; background: rgba(255,255,255,0.1); border-radius:12px; padding:20px; margin-top:20px;">
     <h3 style="margin-bottom:15px;">👑 Админка</h3>
     <button onclick="showAddGame()">Добавить/Редактировать игру</button>
     <button onclick="loadAdminTools()">Обновить список</button>
-    <div id="addGameForm" style="display:none; margin-top:15px;">
-      <h4>Удалить/Редактировать игру</h4>
-      <div id="gameListAdmin"></div>
-      <h4>Добавить новую игру</h4>
-      <input type="text" id="newGameName" placeholder="Название" />
-      <input type="number" id="newGameRating" placeholder="Рейтинг" min="1" max="10" />
-      <select id="newGameStatus">
-        <option>Пройдено</option>
-        <option>В процессе</option>
-        <option>В планах</option>
-      </select>
-      <input type="file" id="newGameImage" accept="image/*" />
-      <button onclick="saveGame()">Сохранить новую игру</button>
-      
-      <!-- Для редактирования -->
-      <form id="editGameForm" style="display:none; margin-top:20px; background:#333; padding:15px; border-radius:8px;">
+
+    <!-- Форма добавления или редактирования -->
+    <div id="addEditContainer" style="margin-top:15px; display:none;">
+      <!-- Добавление -->
+      <div id="addGameForm">
+        <h4>Добавить новую игру</h4>
+        <input type="text" id="newGameName" placeholder="Название" />
+        <input type="number" id="newGameRating" placeholder="Рейтинг" min="1" max="10" />
+        <select id="newGameStatus">
+          <option>Пройдено</option>
+          <option>В процессе</option>
+          <option>В планах</option>
+        </select>
+        <input type="file" id="newGameImage" accept="image/*" />
+        <button onclick="saveGame()">Сохранить игру</button>
+      </div>
+      <!-- Редактирование -->
+      <form id="editGameForm" style="display:none; margin-top:15px; background:#333; padding:15px; border-radius:8px;">
         <input type="hidden" id="editGameId" />
+        <h4>Редактировать игру</h4>
         <input type="text" id="editGameName" placeholder="Название" />
         <input type="number" id="editGameRating" placeholder="Рейтинг" min="1" max="10" />
-        <select id="editGameStatusSelect">
+        <select id="editGameStatus">
           <option>Пройдено</option>
           <option>В процессе</option>
           <option>В планах</option>
@@ -226,8 +218,11 @@ button:hover {
         <button type="button" id="cancelEditBtn" onclick="hideEditForm()">Отмена</button>
       </form>
     </div>
+
     <h4>Модерация отзывов</h4>
-    <div id="reviewsModeration"></div>
+    <div id="reviewsModeration" style="max-height:200px; overflow:auto; background: rgba(255,255,255,0.1); padding:10px; border-radius:8px;"></div>
+    <h4>Список игр на удаление/редактирование</h4>
+    <div id="gameListAdmin"></div>
   </div>
 
   <h3>Все игры</h3>
@@ -249,26 +244,37 @@ button:hover {
 
 <!-- Скрипты -->
 <script>
-  // Инициализация Firebase
-  const firebaseConfig = { /* ваши данные */ };
+  // Объявляем переменную Firebase auth
+  const firebaseConfig = {
+    apiKey: "AIzaSyCeQmPBVXyoJdfwZRoINJonFmPMmrBGH30",
+    authDomain: "mygametracker-44a38.firebaseapp.com",
+    projectId: "mygametracker-44a38",
+    storageBucket: "mygametracker-44a38.appspot.com",
+    messagingSenderId: "756062929019",
+    appId: "1:756062929019:web:7c484a6d691f441a2fe2de",
+    measurementId: "G-1JQYS1VV4L"
+  };
+  // Инициализация
   firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
+  const auth = firebase.auth(); // обязательно перед использованием
+
   const db = firebase.firestore();
   const storage = firebase.storage();
+
   const ADMIN_EMAIL = "werker196@gmail.com";
 
   let isAdmin = false;
 
-  // --- Обработчики интерфейса ---
+  // Управление формами
   function showAuth() {
-    document.getElementById('authButtons').innerHTML='';
-    document.getElementById('authFormContainer').style.display='block';
+    document.getElementById('authSection').innerHTML='';
+    document.getElementById('authForms').style.display='flex';
     document.getElementById('content').style.display='none';
     showLoginForm();
   }
   function hideAuth() {
-    document.getElementById('authButtons').innerHTML= '<button onclick="showAuth()">Войти / Регистрация</button>';
-    document.getElementById('authFormContainer').style.display='none';
+    document.getElementById('authSection').innerHTML= '<button onclick="showAuth()">Войти / Регистрация</button>';
+    document.getElementById('authForms').style.display='none';
   }
   function showLoginForm() {
     document.getElementById('loginForm').style.display='block';
@@ -278,6 +284,8 @@ button:hover {
     document.getElementById('loginForm').style.display='none';
     document.getElementById('registerForm').style.display='block';
   }
+
+  // Войти
   async function performLogin() {
     try {
       await auth.signInWithEmailAndPassword(
@@ -287,6 +295,7 @@ button:hover {
       hideAuth();
     } catch(e) { alert('Ошибка: ' + e.message); }
   }
+  // Зарегистрироваться
   async function performRegister() {
     try {
       const userCred = await auth.createUserWithEmailAndPassword(
@@ -299,31 +308,13 @@ button:hover {
       hideAuth();
     } catch(e){ alert('Ошибка: ' + e.message); }
   }
-  function showModal() {
-    document.getElementById('modalOverlay').style.display='flex';
-  }
-  function closeModal() {
-    document.getElementById('modalOverlay').style.display='none';
-  }
-  async function modalLogin() {
-    try {
-      await auth.signInWithEmailAndPassword(
-        document.getElementById('modalEmail').value.trim(),
-        document.getElementById('modalPassword').value.trim()
-      );
-      closeModal();
-    } catch(e) { alert('Ошибка: ' + e.message); }
-  }
 
-  async function logout() {
-    await auth.signOut();
-    isAdmin=false;
-  }
-
-  // --- Обработчик аутентификации ---
+  // Обработчик изменений входа
   auth.onAuthStateChanged(user => {
     if (user) {
-      localStorage.setItem('siteUser', JSON.stringify({email: user.email, nick: user.displayName || user.email}));
+      document.getElementById('content').style.display='block';
+      document.getElementById('userEmail').innerText=''+(user.displayName || user.email);
+      // Проверка админа
       if (user.email===ADMIN_EMAIL) {
         isAdmin=true;
         loginAsAdmin();
@@ -332,54 +323,48 @@ button:hover {
         loginAsUser(user.displayName || user.email);
       }
     } else {
-      localStorage.removeItem('siteUser');
       showAuth();
       document.getElementById('adminPanel').style.display='none';
     }
-    loadData();
   });
+
+  function logout() {
+    auth.signOut();
+    isAdmin=false;
+  }
 
   function loginAsUser(nick) {
     document.getElementById('content').style.display='block';
-    document.getElementById('userEmail').innerHTML='Вы вошли как: <b>' + (nick || 'пользователь') + '</b>';
-    document.getElementById('adminPanel').style.display='none';
+    document.getElementById('userEmail').innerText='Вы вошли как: <b>' + (nick || 'пользователь') + '</b>';
   }
-
   function loginAsAdmin() {
     document.getElementById('content').style.display='block';
-    document.getElementById('userEmail').innerHTML='Вы вошли как <b>Админ</b>';
+    document.getElementById('userEmail').innerText='Вы вошли как <b>Админ</b>';
     document.getElementById('adminPanel').style.display='block';
     loadAdminTools();
     loadGames();
   }
 
-  async function loadData() {
-    await loadGames();
-    if (isAdmin) loadAdminTools();
-  }
-
   // Загрузка игр
   async function loadGames() {
     const snap = await db.collection('games').get();
-    const gameSelect = document.getElementById('reviewGame');
-    gameSelect.innerHTML='<option value="">Выберите игру</option>';
-
     document.getElementById('games').innerHTML='';
+    document.getElementById('reviewGame').innerHTML='<option value="">Выберите игру</option>';
     snap.forEach(doc => {
       const g = {...doc.data(), id: doc.id};
       let img=g.imageUrl?`<img src="{g.imageUrl}"/>`:'';
       document.getElementById('games').innerHTML+=
         `<div class="game">${img}<h4>${g.name}</h4><p>⭐${g.rating}/10, ${g.status}</p></div>`;
-      // добавляем в селектор отзывов
-      gameSelect.innerHTML+=`<option value="${g.id}">${g.name}</option>`;
+      // для отзывов
+      document.getElementById('reviewGame').innerHTML += `<option value="${g.id}">${g.name}</option>`;
     });
   }
 
-  // Админские функции
+  // В админ-панель
   async function loadAdminTools() {
     const user = await auth.currentUser;
     if (!user || user.email !== ADMIN_EMAIL) return;
-    // Модерация отзывов
+    // отзывы
     const snap = await db.collection('reviews').where('status','==','pending').get();
     const revDiv=document.getElementById('reviewsModeration');
     revDiv.innerHTML='';
@@ -393,8 +378,7 @@ button:hover {
         <button onclick="rejectRev('${r.id}')">✗ Удалить</button><hr>`;
       });
     }
-
-    // Список игр для редактирования и удаления
+    // список игр
     const docs=await db.collection('games').get();
     const gameListDiv=document.getElementById('gameListAdmin');
     gameListDiv.innerHTML='';
@@ -429,13 +413,15 @@ button:hover {
     }
   }
 
-  // Добавить новую игру
+  // Сохранить новую игру
   async function saveGame() {
     const name=document.getElementById('newGameName').value.trim();
     const rating=parseInt(document.getElementById('newGameRating').value);
     const status=document.getElementById('newGameStatus').value;
     const file=document.getElementById('newGameImage').files[0];
+
     if (!name || !rating) { alert('Заполните все поля!'); return; }
+
     let imageUrl='';
     if (file) {
       const ref=storage.ref().child('game_images/'+Date.now()+'.jpg');
@@ -447,19 +433,17 @@ button:hover {
     document.getElementById('newGameRating').value='';
     loadGames();
     loadAdminTools();
-    document.getElementById('addGameForm').style.display='none';
   }
 
-  // Редактирование
+  // Редактировать игру
   async function editGame(id) {
     const g=await db.collection('games').doc(id).get();
     const data=g.data();
     document.getElementById('editGameId').value=id;
     document.getElementById('editGameName').value=data.name;
     document.getElementById('editGameRating').value=data.rating;
-    document.getElementById('editGameStatusSelect').value=data.status;
+    document.getElementById('editGameStatus').value=data.status;
     document.getElementById('editGameForm').style.display='block';
-    gameToEditId=id;
   }
 
   function showAddGame() {
@@ -467,21 +451,21 @@ button:hover {
     document.getElementById('editGameId').value='';
     document.getElementById('editGameName').value='';
     document.getElementById('editGameRating').value='';
-    document.getElementById('editGameStatusSelect').value='Пройдено';
+    document.getElementById('editGameStatus').value='Пройдено';
   }
 
   function hideEditForm() {
     document.getElementById('editGameForm').style.display='none';
   }
-
+  // Сохранить редактирование
   async function saveEditedGame() {
     const id=document.getElementById('editGameId').value;
     const name=document.getElementById('editGameName').value.trim();
     const rating=parseInt(document.getElementById('editGameRating').value);
-    const status=document.getElementById('editGameStatusSelect').value;
+    const status=document.getElementById('editGameStatus').value;
     const file=document.getElementById('editGameImage').files[0];
 
-    if(!name || !rating) { alert('Заполните все поля!'); return; }
+    if (!name || !rating) { alert('Заполните все поля!'); return; }
 
     const updateData={name,rating,status};
     if (file) {
@@ -511,24 +495,10 @@ button:hover {
     document.getElementById('reviewGame').value='';
   }
 
-  // Показываем форму редактирования игры
+  // Показываем форму редактирования
   function showEditGame(id) {
     editGame(id);
-  }
-
-  // Показываем форму для добавления/редактирования
-  function showAddGame() {
-    document.getElementById('editGameForm').style.display='block';
-    document.getElementById('editGameId').value='';
-    document.getElementById('editGameName').value='';
-    document.getElementById('editGameRating').value='';
-    document.getElementById('editGameStatusSelect').value='Пройдено';
-  }
-  function hideEditForm() {
-    document.getElementById('editGameForm').style.display='none';
   }
 </script>
 </body>
 </html>
-
-
