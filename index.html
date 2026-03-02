@@ -2,117 +2,89 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<title>Игровой Трекер — Регистрация и вход</title>
-<!-- Подключение Firebase -->
+<title>Игровой трекер | Регистрация и вход</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 <style>
-  body { background:#2b2d42; font-family:sans-serif; margin:0; padding:20px; color:#fff; }
-  h1 { text-align:center; margin-bottom:15px; }
-  .menu { display:flex; justify-content: center; gap:12px; margin-bottom:20px; }
-  button { border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1rem; background:#00b894; color:#fff; transition: background 0.3s; }
-  button:hover { background:#019778; }
-  #authButtons { margin-top:10px; display:flex; justify-content: center; gap:10px; }
-  input, select { display:block; width:250px; margin:10px auto; padding:8px; border:none; border-radius:6px; background:#4ecca3; color:#222; }
-  #content { max-width:960px; margin:0 auto; }
-  #games { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:16px; margin-top:20px; }
-  .game { background:#3b3e49; padding:15px; border-radius:8px; border:2px solid #222; overflow:hidden; }
-  .game img { width:100%; border-radius:4px; margin-bottom:10px; max-height:200px; object-fit:cover; }
-  .reviews { margin-top:10px; font-size:0.9em; }
-  .reviews div { border-top:1px dashed #aaa; padding:8px 0; }
-  #adminPanel { display:none; background:#222; padding:15px; border-radius:8px; margin-top:20px; }
-  #adminPanel h3 { margin-top:0; }
-  #adminGames { max-height:200px; overflow-y:auto; margin-bottom:10px; }
-  #reviewsModeration { max-height:200px; overflow-y:auto; margin-bottom:10px; border:1px solid #555; padding:8px; border-radius:6px; font-size:0.9em; }
-  #modalOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:999; }
-  #modal { background:#222; padding:20px; border-radius:8px; max-width:350px; text-align:center; color:#fff; }
-  #modal input { width:80%; margin-bottom:10px; }
+body { background:#2b2d42; font-family:sans-serif; margin:0; padding:20px; color:#fff; }
+h1 { text-align:center; margin-bottom:15px; }
+.menu { display:flex; justify-content: center; gap:12px; margin-bottom:20px; }
+button { border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1rem; background:#00b894; color:#fff; transition: background 0.3s; }
+button:hover { background:#019778; }
+#authButtons { margin-top:10px; display:flex; justify-content: center; gap:10px; }
+input, select { display:block; width:250px; margin:10px auto; padding:8px; border:none; border-radius:6px; background:#4ecca3; color:#222; }
+#content { max-width:960px; margin:0 auto; }
+#games { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:16px; margin-top:20px; }
+.game { background:#3b3e49; padding:15px; border-radius:8px; border:2px solid #222; overflow:hidden; }
+.game img { width:100%; border-radius:4px; margin-bottom:10px; max-height:200px; object-fit:cover; }
+#reviewBox { margin-top:20px; }
+#reviews { margin-top:20px; max-height:300px; overflow-y:auto; }
 </style>
 </head>
 <body>
 
 <h1>🎮 Мой игровой трекер</h1>
-
 <div class="menu">
-  <button id="btnLogin" onclick="showLogin()">Войти / Регистрация</button>
-  <button id="btnAdmin" style="display:none;" onclick="checkAdmin()">Войти в админку</button>
+  <button id="btnAuth" onclick="showAuth()">Войти / Регистрация</button>
 </div>
 
-<div id="authButtons">
-  <!-- В этом блоке будут кнопки входа/выхода -->
-</div>
-
+<div id="authArea"></div>
 <div id="userInfo"></div>
 
-<div id="content">
-  <!-- Вход/регистрация -->
-  <div id="authSections" style="display:none;">
-    <div id="loginSection" style="display:none;">
-      <h3>Войти</h3>
-      <input type="email" id="loginEmail" placeholder="Email" />
-      <input type="password" id="loginPass" placeholder="Пароль" />
-      <button onclick="login()">Войти</button>
-    </div>
-    <div id="registerSection" style="display:none;">
-      <h3>Регистрация</h3>
-      <input type="email" id="regEmail" placeholder="Email" />
-      <input type="text" id="regNick" placeholder="Ваш ник" />
-      <input type="password" id="regPass" placeholder="Пароль" />
-      <button onclick="register()">Зарегистрироваться</button>
-    </div>
+<div id="content" style="display:none;">
+  <div id="userPanel">
+    <p>Вы вошли как: <b id="userEmail"></b></p>
+    <button onclick="logout()">Выйти</button>
   </div>
 
-  <!-- Основной контент для всех -->
-  <div id="mainArea" style="display:none;">
-    <div id="userPanel">
-      <p>Вы вошли как: <b id="userEmail"></b></p>
-      <button onclick="logout()">Выйти</button>
-    </div>
-    <!-- Админская панель -->
-    <div id="adminPanel">
-      <h3>Админка</h3>
-      <button onclick="logout()">Выйти из админки</button>
-      <h4>Добавить игру</h4>
-      <input type="text" id="gameName" placeholder="Название игры" />
-      <input type="number" id="gameRating" placeholder="Рейтинг 1-10" min="1" max="10" />
-      <select id="gameStatus">
-        <option>Пройдено</option><option>В процессе</option><option>В планах</option>
-      </select>
-      <label>Картинка:</label>
-      <input type="file" id="gameImageFile" accept="image/*" />
-      <button onclick="addGame()">Добавить игру</button>
-      <h4>Удалить игру</h4>
-      <div id="gameList"></div>
-      <h4>Модерация отзывов</h4>
-      <div id="reviewsModeration"></div>
-    </div>
-    <!-- Основной список игр -->
-    <h3>Игры</h3>
-    <div id="games"></div>
+  <!-- Админская панель -->
+  <div id="adminPanel" style="display:none; background:#222; padding:15px; border-radius:10px; margin-bottom:20px;">
+    <h3>👑 Админка</h3>
+    <button onclick="logout()">Выйти из админки</button>
+    <h4>Добавить игру</h4>
+    <input type="text" id="gameName" placeholder="Название игры" />
+    <input type="number" id="gameRating" placeholder="Рейтинг 1-10" min="1" max="10" />
+    <select id="gameStatus">
+      <option>Пройдено</option><option>В процессе</option><option>В планах</option>
+    </select>
+    <br><br>
+    <label>Картинка к игре:</label>
+    <input type="file" id="gameImageFile" accept="image/*" />
+    <br><br>
+    <button onclick="addGame()">Добавить игру</button>
+    <h4>Удалить игру</h4>
+    <div id="gameList"></div>
+    <h4>Модерация отзывов</h4>
+    <div id="reviewsModeration"></div>
+  </div>
 
-    <!-- Оставить отзыв -->
-    <div id="reviewBox" style="margin-top:20px; display:none;">
-      <h4>Оставить отзыв</h4>
-      <select id="reviewGameSelect"><option value="">Выберите игру</option></select>
-      <input type="number" id="reviewRating" placeholder="Оценка 1-10" min="1" max="10" />
-      <select id="reviewBack">
-        <option value="yes">Вернусь</option>
-        <option value="no">Не вернусь</option>
-        <option value="maybe">Возможно</option>
-      </select>
-      <button onclick="submitReview()">Отправить</button>
-    </div>
+  <!-- Основной список игр -->
+  <h3>Игры</h3>
+  <div id="games"></div>
+
+  <!-- Оставить отзыв -->
+  <div id="reviewBox" style="margin-top:20px; display:none;">
+    <h4>Оставить отзыв</h4>
+    <select id="reviewGame"></select>
+    <input type="number" id="reviewRating" placeholder="Оценка 1-10" min="1" max="10" />
+    <select id="reviewBack">
+      <option value="yes">Вернусь</option>
+      <option value="no">Не вернусь</option>
+      <option value="maybe">Возможно</option>
+    </select>
+    <button onclick="submitReview()">Отправить</button>
   </div>
 </div>
 
-<!-- Модальное окно входа -->
-<div id="modalOverlay">
-  <div id="modal">
+<!-- Всплывающее окно входа -->
+<div id="modalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:999;">
+  <div style="background:#222; padding:20px; border-radius:10px; max-width:300px; text-align:center; color:#fff;">
     <h4>Введите свои данные</h4>
     <input type="email" id="modalEmail" placeholder="Email" />
     <input type="password" id="modalPassword" placeholder="Пароль" />
+    <br>
     <button onclick="modalLogin()">Войти</button>
     <button onclick="closeModal()">Отмена</button>
   </div>
@@ -134,7 +106,7 @@
   const db = firebase.firestore();
   const storage = firebase.storage();
 
-  // Ваша почта администратора
+  // ваш email - замените, чтобы он совпадал
   const ADMIN_EMAIL = "werker196@gmail.com";
 
   let isAdmin = false;
@@ -158,7 +130,7 @@
 
   function showAuth() {
     document.getElementById('authButtons').innerHTML= '<button onclick="showModal()">Войти / Регистрация</button>';
-    document.getElementById('mainArea').style.display='none';
+    document.getElementById('content').style.display='none';
   }
 
   function showModal() {
@@ -176,9 +148,7 @@
       document.getElementById('modalEmail').value='';
       document.getElementById('modalPassword').value='';
       closeModal();
-    } catch(e) {
-      alert('Ошибка: ' + e.message);
-    }
+    } catch(e){ alert('Ошибка: ' + e.message); }
   }
 
   async function register() {
@@ -189,8 +159,8 @@
       const u = await auth.createUserWithEmailAndPassword(email, pass);
       await u.user.updateProfile({ displayName: nick });
       localStorage.setItem('siteUser', JSON.stringify({email, nick}));
-      alert('Регистрация успешна! Войдите в систему.');
-    } catch(e) { alert('Ошибка: ' + e.message); }
+      alert('Регистрация успешна! Войдите.');
+    } catch(e){ alert('Ошибка: ' + e.message); }
   }
 
   async function login() {
@@ -198,33 +168,26 @@
     const pass = document.getElementById('loginPassword').value.trim();
     try {
       await auth.signInWithEmailAndPassword(email, pass);
-      document.getElementById('loginEmail').value='';
-      document.getElementById('loginPassword').value='';
-    } catch(e) {
-      alert('Ошибка входа: ', e.message);
-    }
+    } catch(e){ alert('Ошибка: ' + e.message); }
   }
 
   function loginAsUser(nick) {
-    isAdmin = false;
-    document.getElementById('authButtons').innerHTML= '<button onclick="logout()">Выйти</button>';
-    document.getElementById('userInfo').innerHTML='Вы вошли как: <b>' + nick + '</b>';
-    document.getElementById('mainArea').style.display='block';
+    document.getElementById('content').style.display='block';
+    document.getElementById('userInfo').innerHTML='Вы вошли как: <b>' + (nick || 'пользователь') + '</b>';
+    document.getElementById('adminPanel').style.display='none';
     document.getElementById('reviewBox').style.display='block';
   }
 
   function loginAsAdmin() {
-    isAdmin = true;
-    document.getElementById('authButtons').innerHTML= '<button onclick="logout()">Выйти</button>';
+    document.getElementById('content').style.display='block';
     document.getElementById('userInfo').innerHTML='Вы вошли как <b>Админ</b>';
-    document.getElementById('mainArea').style.display='block';
+    document.getElementById('adminPanel').style.display='block';
     loadAdminTools();
+    loadGames();
   }
 
   async function logout() {
     await auth.signOut();
-    localStorage.removeItem('siteUser');
-    loadData();
   }
 
   async function loadData() {
@@ -236,18 +199,18 @@
   async function loadGames() {
     const snap = await db.collection('games').get();
     document.getElementById('games').innerHTML='';
-    snap.forEach(d => {
-      const g = {id: d.id, ...d.data()};
+    snap.forEach(doc => {
+      const g = {id: doc.id, ...doc.data()};
       let img = g.imageUrl ? `<img src="${g.imageUrl}" />` : '';
-      document.getElementById('games').innerHTML += `
+      document.getElementById('games').innerHTML+=`
         <div class="game" style="background:#4e607f;">
-        ${img}
-        <h4>${g.name}</h4>
-        <p>⭐${g.rating}/10, ${g.status}</p>
+          ${img}
+          <h4>${g.name}</h4>
+          <p>⭐${g.rating}/10, ${g.status}</p>
         </div>`;
     });
-    // Обновляем селект для отзывов
-    const sel = document.getElementById('reviewGameSelect');
+    // Обновление селекта отзывов
+    const sel = document.getElementById('reviewGame');
     sel.innerHTML='<option value="">Выберите игру</option>';
     const docs = await db.collection('games').get();
     docs.forEach(g => {
@@ -256,8 +219,8 @@
     });
   }
 
-  // Админка — управление отзывами и удаление игры
   async function loadAdminTools() {
+    if (!(await auth.currentUser).email === ADMIN_EMAIL) return; 
     // отзывы на модерации
     const snap = await db.collection('reviews').where('status','==','pending').get();
     document.getElementById('reviewsModeration').innerHTML='';
@@ -293,15 +256,12 @@
   async function deleteGame(id) {
     if (confirm('Удалить игру?')) {
       await db.collection('games').doc(id).delete();
-      // удаляем отзывы этой игры
       const revs = await db.collection('reviews').where('gameId','==',id).get();
       for (const r of revs.docs) await db.collection('reviews').doc(r.id).delete();
-      loadGames();
-      loadAdminTools();
+      loadGames(); loadAdminTools();
     }
   }
 
-  // Добавление игры (админ)
   async function addGame() {
     const name = document.getElementById('gameName').value.trim();
     const rating = parseInt(document.getElementById('gameRating').value);
@@ -309,7 +269,7 @@
     const file = document.getElementById('gameImageFile').files[0];
 
     if (!name || !rating) { alert('Заполните всё!'); return; }
-    let imageUrl = '';
+    let imageUrl='';
     if (file) {
       const ref = storage.ref().child('game_images/'+Date.now()+'.jpg');
       await ref.put(file);
@@ -318,28 +278,25 @@
     await db.collection('games').add({name, rating, status, imageUrl});
     document.getElementById('gameName').value=''; 
     document.getElementById('gameRating').value=''; 
-    loadGames();
-    loadAdminTools();
+    loadGames(); loadAdminTools();
   }
 
-  // Оставлять отзыв — для всех, кто вошел
   async function submitReview() {
-    const gameId = document.getElementById('reviewGameSelect').value;
+    const gameId = document.getElementById('reviewGame').value;
     const rate = document.getElementById('reviewRating').value;
     const back = document.getElementById('reviewBack').value;
     const user = JSON.parse(localStorage.getItem('siteUser'));
-    if (!gameId || !rate || !user) { alert('Заполните всё!'); return; }
+    if (!gameId || !rate || !user) { alert('Заполните всё'); return; }
     await db.collection('reviews').add({
       gameId, rate, back, userNick: user.nick || user.email, status:'pending', created: new Date()
     });
     alert('Отзыв отправлен на модерацию!');
-    document.getElementById('reviewRating').value=''; document.getElementById('reviewGameSelect').value='';
+    document.getElementById('reviewRating').value=''; document.getElementById('reviewGame').value='';
   }
 
-  // Отзывы — отображаются только после одобрения админом
-  async function loadUserReviews() {
-    // ничего делать не нужно, отзывы появятся после одобрения
-  }
+  function loadUserReviews() { /* отзывы показываются после одобрения */ }
+</script>
 
 
 </script>
+
