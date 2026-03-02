@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Мой игровой трекер</title>
-<!-- Шрифты и иконки -->
+<!-- Шрифты и стили -->
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
 body {
@@ -13,36 +13,34 @@ body {
   background: linear-gradient(135deg, #141e30, #243b55);
   color: #fff;
   min-height: 100vh;
-  padding: 20px;
 }
 h1 {
   text-align: center;
   font-size: 2.8rem;
   margin-bottom: 20px;
 }
-.menu {
+#buttons {
   display: flex;
   justify-content: center;
   gap: 20px;
   margin-bottom: 20px;
 }
-/* Кнопки */
 button {
-  background: #00b894;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 12px 24px;
   font-weight: 700;
   font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #00b894;
   cursor: pointer;
   transition: background 0.3s;
 }
 button:hover {
-  background:#019778;
+  background: #019778;
 }
 #authSection {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 #authContainer {
   display: none;
@@ -55,30 +53,19 @@ button:hover {
 }
 #authContainer.show {
   display: flex;
-}
-#authButtonsContainer {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 10px;
-}
-#authForm {
-  display: none;
   flex-direction: column;
   gap: 10px;
-  margin-top: 15px;
 }
-#authForm.show {
-  display: flex;
-}
-#authForm input {
+#authContainer input {
   padding: 10px;
+  margin: 8px 0;
   border-radius: 6px;
   border: none;
   font-family: 'Roboto', sans-serif;
   font-size: 1rem;
 }
-#content {
+#mainContent {
+  display: none;
   max-width: 1024px;
   margin: 0 auto 40px;
   padding: 0 20px;
@@ -108,10 +95,11 @@ button:hover {
   margin-bottom: 10px;
 }
 #adminPanel {
-  background: rgba(255,255,255,0.1);
+  display: none;
+  background: rgba(255,255,255,0.2);
   border-radius: 12px;
   padding: 20px;
-  margin-top: 30px;
+  margin-top: 20px;
 }
 #reviewsModeration {
   max-height: 200px;
@@ -136,41 +124,46 @@ button:hover {
 <h1>🎮 Мой расширенный игровой трекер</h1>
 
 <!-- Кнопки "Вход" и "Регистрация" -->
-<div id="authButtonsContainer" style="text-align:center; margin-bottom:15px; display:none;">
-  <button onclick="showLogin()">Вход</button>
-  <button onclick="showRegister()">Регистрация</button>
+<div id="buttons">
+  <button onclick="showAuth()">Войти / Регистрация</button>
 </div>
 
-<!-- Основной блок авторизации -->
-<div id="authContainer" class="show" style="display:none; flex-direction:column;">
-  <!-- Вход -->
-  <div id="loginContainer" style="display:none;">
+<!-- Контейнер формы входа/регистрации -->
+<div id="authContainer">
+  <button style="align-self:flex-end; margin-bottom:10px;" onclick="hideAuth()">Закрыть</button>
+  <!-- Переключатели формы -->
+  <div style="display:flex; justify-content:center; gap:20px; margin-bottom:10px;">
+    <button onclick="showLogin()">Вход</button>
+    <button onclick="showRegister()">Регистрация</button>
+  </div>
+  <!-- Форма входа -->
+  <div id="loginForm" style="display:none;">
     <h3>Войти</h3>
     <input type="email" id="loginEmail" placeholder="Email" />
     <input type="password" id="loginPassword" placeholder="Пароль" />
     <button onclick="performLogin()">Войти</button>
   </div>
-  <!-- Регистрация -->
-  <div id="registerContainer" style="display:none;">
+  <!-- Форма регистрации -->
+  <div id="registerForm" style="display:none;">
     <h3>Регистрация</h3>
     <input type="text" id="registerNick" placeholder="Ник" />
     <input type="email" id="registerEmail" placeholder="Email" />
     <input type="password" id="registerPassword" placeholder="Пароль" />
     <button onclick="performRegister()">Зарегистрироваться</button>
   </div>
-  <button onclick="hideAuth()">Отмена</button>
 </div>
 
 <!-- Основной контент -->
-<div id="mainContent" style="display:none;">
+<div id="mainContent">
   <p>Вы вошли как: <b id="userLabel"></b></p>
   <button onclick="logout()">Выйти</button>
-  
-  <!-- Админ панель -->
+
+  <!-- Админка -->
   <div id="adminPanel" style="display:none; margin-top:20px; background:#fff; color:#000; border-radius:12px; padding:20px;">
     <h3>👑 Админка</h3>
     <button onclick="showAddGame()">Добавить / Редактировать игру</button>
     <button onclick="loadAdminTools()">Обновить список</button>
+    <!-- Добавление / редактирование -->
     <div id="addEditArea" style="margin-top:15px;">
       <!-- Добавление -->
       <div id="addGameForm">
@@ -201,8 +194,10 @@ button:hover {
         <button onclick="hideEditGame()">Отмена</button>
       </div>
     </div>
+    <!-- Модерация отзывов -->
     <h4>Модерация отзывов</h4>
     <div id="reviewsModeration"></div>
+    <!-- Список игр (на редактирование) -->
     <h4>Список игр</h4>
     <div id="gameListAdmin"></div>
   </div>
@@ -211,7 +206,7 @@ button:hover {
   <h3>Все игры</h3>
   <div id="games"></div>
 
-  <!-- Оставить отзыв -->
+  <!-- Отзыв -->
   <div style="margin-top:30px;">
     <h4>Оставить отзыв</h4>
     <select id="reviewGame"></select>
@@ -227,7 +222,7 @@ button:hover {
 
 <!-- Скрипт -->
 <script>
-  // Вставьте сюда ваши ключи
+  // Вставьте сюда свои ключи Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyCeQmPBVXyoJdfwZRoINJonFmPMmrBGH30",
     authDomain: "mygametracker-44a38.firebaseapp.com",
@@ -237,7 +232,6 @@ button:hover {
     appId: "1:756062929019:web:7c484a6d691f441a2fe2de",
     measurementId: "G-1JQYS1VV4L"
   };
-  // Инициализация
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
@@ -246,26 +240,25 @@ button:hover {
 
   let isAdmin = false;
 
-  // Обработчики
+  // Показываем форму
   function showAuth() {
     document.getElementById("authContainer").classList.add("show");
   }
   function hideAuth() {
     document.getElementById("authContainer").classList.remove("show");
   }
+  // Переключение на вход
   function showLogin() {
-    document.getElementById('loginContainer').style.display='block';
-    document.getElementById('registerContainer').style.display='none';
+    document.getElementById('loginForm').style.display='block';
+    document.getElementById('registerForm').style.display='none';
   }
+  // Переключение на рег
   function showRegister() {
-    document.getElementById('loginContainer').style.display='none';
-    document.getElementById('registerContainer').style.display='block';
-  }
-  function backToMain() {
-    document.getElementById("authContainer").classList.remove("show");
+    document.getElementById('loginForm').style.display='none';
+    document.getElementById('registerForm').style.display='block';
   }
 
-  // Вход / регистрация
+  // Вход
   async function performLogin() {
     try {
       await auth.signInWithEmailAndPassword(
@@ -274,9 +267,10 @@ button:hover {
       );
     } catch(e) { alert('Ошибка: ' + e.message); }
   }
+  // Регистрация
   async function performRegister() {
     try {
-      const cred= await auth.createUserWithEmailAndPassword(
+      const cred=await auth.createUserWithEmailAndPassword(
         document.getElementById('registerEmail').value.trim(),
         document.getElementById('registerPassword').value.trim()
       );
@@ -284,24 +278,23 @@ button:hover {
     } catch(e){ alert('Ошибка: ' + e.message); }
   }
 
-  // Обработка входа
+  // Обработчик входа/выхода
   auth.onAuthStateChanged(user => {
     if(user){
       document.getElementById('mainContent').style.display='block';
       document.getElementById('userLabel').innerText=''+(user.displayName || user.email);
-      document.getElementById("authContainer").classList.remove("show");
-      document.getElementById("authSection").style.display='none';
       if(user.email===ADMIN_EMAIL){ isAdmin=true; loginAsAdmin(); } else { isAdmin=false; loginAsUser(); }
+      document.getElementById("authContainer").classList.remove("show");
     } else {
       document.getElementById('mainContent').style.display='none';
-      document.getElementById("authContainer").classList.remove("show");
-      document.getElementById("authSection").style.display='block';
     }
   });
+
   function loginAsUser() {}
   function loginAsAdmin() {
     document.getElementById('adminPanel').style.display='block';
-    loadAdminTools(); loadGames();
+    loadAdminTools();
+    loadGames();
   }
   async function logout() {
     await auth.signOut();
@@ -320,7 +313,7 @@ button:hover {
     });
   }
 
-  // Админка
+  // Открыть панель администратора
   async function loadAdminTools() {
     const user=await auth.currentUser;
     if(!user || user.email!==ADMIN_EMAIL) return;
@@ -337,12 +330,13 @@ button:hover {
         <button onclick="rejectRev('${r.id}')">✗ Удалить</button><hr>`;
       });
     }
-    // список игр
+    // список игр для редактирования
     const docs=await db.collection('games').get();
-    document.getElementById('gameListAdmin').innerHTML='';
+    const listDiv=document.getElementById('gameListAdmin');
+    listDiv.innerHTML='';
     docs.forEach(g => {
       const d=g.data();
-      document.getElementById('gameListAdmin').innerHTML+=`
+      listDiv.innerHTML+=`
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <span>${d.name}</span>
         <div>
@@ -354,77 +348,74 @@ button:hover {
   }
   async function approveRev(id){ await db.collection('reviews').doc(id).update({status:'approved'}); loadAdminTools(); }
   async function rejectRev(id){ await db.collection('reviews').doc(id).delete(); loadAdminTools();}
-  async function deleteGame(id){
+  async function deleteGame(id){ 
     if(confirm('Удалить игру?')){
-      await db.collection('games').doc(id).delete();
+      await db.collection('games').doc(id).delete(); 
       const revs=await db.collection('reviews').where('gameId','==',id).get();
       for(const r of revs.docs) await db.collection('reviews').doc(r.id).delete();
       loadGames(); loadAdminTools();
     }
   }
 
-  // Добавление
-  async function saveGame() {
-    const name=document.getElementById('newGameName').value.trim();
-    const rating=parseInt(document.getElementById('newGameRating').value);
-    const status=document.getElementById('newGameStatus').value;
-    const file=document.getElementById('newGameImage').files[0];
-    if(!name || !rating){ alert('Заполните всё!'); return; }
-    let imageUrl='';
-    if(file){
-      const ref=storage.ref().child('game_images/'+Date.now()+'.jpg');
-      await ref.put(file);
-      imageUrl=await ref.getDownloadURL();
-    }
-    await db.collection('games').add({name,rating,status,imageUrl});
-    document.getElementById('newGameName').value=''; document.getElementById('newGameRating').value='';
-    loadGames(); loadAdminTools();
+  // Сохранить игру
+async function saveGame() {
+  const name=document.getElementById('newGameName').value.trim();
+  const rating=parseInt(document.getElementById('newGameRating').value);
+  const status=document.getElementById('newGameStatus').value;
+  const file=document.getElementById('newGameImage').files[0];
+  if(!name || !rating){ alert('Заполните всё!'); return; }
+  let imageUrl='';
+  if(file){
+    const ref=storage.ref().child('game_images/'+Date.now()+'.jpg');
+    await ref.put(file);
+    imageUrl=await ref.getDownloadURL();
   }
-  // Редактировать
-  async function editGame(id){
-    const g=await db.collection('games').doc(id).get();
-    const data=g.data();
-    document.getElementById('editGameId').value=id;
-    document.getElementById('editGameName').value=data.name;
-    document.getElementById('editGameRating').value=data.rating;
-    document.getElementById('editGameStatus').value=data.status;
-    document.getElementById('editGameDiv').style.display='block';
+  await db.collection('games').add({name,rating,status,imageUrl});
+  document.getElementById('newGameName').value=''; document.getElementById('newGameRating').value='';
+  loadGames(); loadAdminTools();
+}
+async function editGame(id){
+  const g=await db.collection('games').doc(id).get();
+  const data=g.data();
+  document.getElementById('editGameId').value=id;
+  document.getElementById('editGameName').value=data.name;
+  document.getElementById('editGameRating').value=data.rating;
+  document.getElementById('editGameStatus').value=data.status;
+  document.getElementById('editGameDiv').style.display='block';
+}
+function showAddGame(){ document.getElementById('editGameDiv').style.display='block'; 
+  document.getElementById('editGameId').value=''; 
+  document.getElementById('editGameName').value=''; 
+  document.getElementById('editGameRating').value=''; 
+  document.getElementById('editGameStatus').value='Пройдено'; }
+function hideEditGame(){ document.getElementById('editGameDiv').style.display='none'; }
+async function saveEditedGame() {
+  const id=document.getElementById('editGameId').value;
+  const name=document.getElementById('editGameName').value;
+  const rating=parseInt(document.getElementById('editGameRating').value);
+  const status=document.getElementById('editGameStatus').value;
+  const file=document.getElementById('editGameImage').files[0];
+  if(!name || !rating){ alert('Заполните всё!'); return; }
+  const updateData={name,rating,status};
+  if(file){ 
+    const ref=storage.ref().child('game_images/'+Date.now()+'.jpg');
+    await ref.put(file);
+    updateData.imageUrl=await ref.getDownloadURL();
   }
-  function showAddGame(){ document.getElementById('editGameDiv').style.display='block'; 
-    document.getElementById('editGameId').value=''; document.getElementById('editGameName').value=''; 
-    document.getElementById('editGameRating').value=''; document.getElementById('editGameStatus').value='Пройдено'; }
-  function hideEditGame(){ document.getElementById('editGameDiv').style.display='none'; }
-  async function saveEditedGame() {
-    const id=document.getElementById('editGameId').value;
-    const name=document.getElementById('editGameName').value;
-    const rating=parseInt(document.getElementById('editGameRating').value);
-    const status=document.getElementById('editGameStatus').value;
-    const file=document.getElementById('editGameImage').files[0];
-    if(!name || !rating){ alert('Заполните всё!'); return; }
-    const updateData={name,rating,status};
-    if(file){
-      const ref=storage.ref().child('game_images/'+Date.now()+'.jpg');
-      await ref.put(file);
-      updateData.imageUrl=await ref.getDownloadURL();
-    }
-    await db.collection('games').doc(id).update(updateData);
-    hideEditGame(); loadGames(); loadAdminTools();
-  }
-
-  // Отзыв
-  async function submitReview() {
-    const gameId=document.getElementById('reviewGame').value;
-    const rate=document.getElementById('reviewRating').value;
-    const back=document.getElementById('reviewBack').value;
-    const user=JSON.parse(localStorage.getItem('siteUser'));
-    if(!gameId || !rate || !user){ alert('Заполните всё!'); return; }
-    await db.collection('reviews').add({ gameId, rate, back, userNick: user.nick||user.email, status:'pending', created:new Date() });
-    alert('Отзыв отправлен! Он ожидает модерации.');
-    document.getElementById('reviewRating').value='';
-    document.getElementById('reviewGame').value='';
-  }
+  await db.collection('games').doc(id).update(updateData);
+  hideEditGame(); loadGames(); loadAdminTools();
+}
+async function submitReview() {
+  const gameId=document.getElementById('reviewGame').value;
+  const rate=document.getElementById('reviewRating').value;
+  const back=document.getElementById('reviewBack').value;
+  const user=JSON.parse(localStorage.getItem('siteUser'));
+  if(!gameId || !rate || !user){ alert('Заполните всё!'); return; }
+  await db.collection('reviews').add({ gameId, rate, back, userNick: user.nick||user.email, status:'pending', created:new Date() });
+  alert('Отзыв отправлен!');
+  document.getElementById('reviewRating').value='';
+  document.getElementById('reviewGame').value='';
+}
 </script>
 </body>
 </html>
-
-
