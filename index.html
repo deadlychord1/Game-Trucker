@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<title>Игровой трекер | Регистрация и вход</title>
+<title>Игровой трекер | Вход и Регистрация</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -32,8 +32,19 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
   <button id="btnAuth" onclick="showAuth()">Войти / Регистрация</button>
 </div>
 
-<div id="authArea"></div>
-<div id="userInfo"></div>
+<!-- Здесь появляется кнопка для входа/регистрации -->
+<div id="authButtons"></div>
+
+<!-- Внутри скрытого окна входа/регистрации -->
+<div id="modalOverlay">
+  <div style="background:#222; padding:20px; border-radius:10px; max-width:300px; margin:auto;">
+    <h4>Введите свои данные</h4>
+    <input type="email" id="modalEmail" placeholder="Email" />
+    <input type="password" id="modalPassword" placeholder="Пароль" />
+    <button onclick="modalLogin()">Войти</button>
+    <button onclick="closeModal()">Отмена</button>
+  </div>
+</div>
 
 <div id="content" style="display:none;">
   <div id="userPanel">
@@ -41,6 +52,7 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
     <button onclick="logout()">Выйти</button>
   </div>
 
+  <!-- Админская панель -->
   <div id="adminPanel" style="display:none; background:#222; padding:15px; border-radius:10px; margin-bottom:20px;">
     <h3>👑 Админка</h3>
     <button onclick="logout()">Выйти из админки</button>
@@ -64,7 +76,8 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
   <h3>Игры</h3>
   <div id="games"></div>
 
-  <div id="reviewBox" style="margin-top:20px;">
+  <!-- Оставить отзыв -->
+  <div id="reviewBox" style="margin-top:20px; display:none;">
     <h4>Оставить отзыв</h4>
     <select id="reviewGame"></select>
     <input type="number" id="reviewRating" placeholder="Оценка 1-10" min="1" max="10" />
@@ -75,18 +88,6 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
     </select>
     <br><br>
     <button onclick="submitReview()">Отправить</button>
-  </div>
-</div>
-
-<!-- Всплывающее окно входа -->
-<div id="modalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:999;">
-  <div style="background:#222; padding:20px; border-radius:10px; max-width:300px;">
-    <h4>Введите свои данные</h4>
-    <input type="email" id="modalEmail" placeholder="Email" />
-    <input type="password" id="modalPassword" placeholder="Пароль" />
-    <br>
-    <button onclick="modalLogin()">Войти</button>
-    <button onclick="closeModal()">Отмена</button>
   </div>
 </div>
 
@@ -158,7 +159,7 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
       const u = await auth.createUserWithEmailAndPassword(email, pass);
       await u.user.updateProfile({ displayName: nick });
       localStorage.setItem('siteUser', JSON.stringify({email, nick}));
-      alert('Регистрация прошла успешно! Войдите.');
+      alert('Регистрация успешна! Войдите.');
     } catch(e){ alert('Ошибка: ' + e.message); }
   }
 
@@ -189,7 +190,6 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
     await auth.signOut();
   }
 
-  // Загрузка данных
   async function loadData() {
     await loadGames();
     if (isAdmin) loadAdminTools();
@@ -201,14 +201,14 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
     document.getElementById('games').innerHTML='';
     snap.forEach(doc => {
       const g = {id: doc.id, ...doc.data()};
-      let img=`${g.imageUrl ? `<img src="${g.imageUrl}" />` : ''}`;
+      let img=`{g.imageUrl ? `<img src="${g.imageUrl}" />` : ''}`;
       document.getElementById('games').innerHTML+=`
         <div class="game" style="background:#4e607f;">${img}
           <h4>${g.name}</h4>
           <p>⭐${g.rating}/10, ${g.status}</p>
         </div>`;
     });
-    // обновляем селект для отзывов
+    // Обновляем селект для отзывов
     const sel = document.getElementById('reviewGame');
     sel.innerHTML='<option value="">Выберите игру</option>';
     const docs = await db.collection('games').get();
@@ -218,13 +218,12 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
     });
   }
 
-  // админка
+  // Для админа — управление отзывами и удаление
   async function loadAdminTools() {
     const user = await auth.currentUser;
     if (user.email !== 'werker196@gmail.com') return;
-    // отзывы на модерации
     const snap = await db.collection('reviews').where('status','==','pending').get();
-    document.getElementById('reviewsModeration').innerHTML=''; 
+    document.getElementById('reviewsModeration').innerHTML='';
     if (snap.empty) {
       document.getElementById('reviewsModeration').innerHTML='Нет отзывов на модерации.';
     } else {
@@ -236,7 +235,6 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
         <button onclick="rejectRev('${r.id}')">✗ Удалить</button><hr>`;
       });
     }
-    // список игр для удаления
     const docs = await db.collection('games').get();
     document.getElementById('gameList').innerHTML='';
     docs.forEach(g => {
@@ -282,7 +280,6 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
     loadGames(); loadAdminTools();
   }
 
-  // отправка отзывов (для авторизованных)
   async function submitReview() {
     const gameId = document.getElementById('reviewGame').value;
     const rate = document.getElementById('reviewRating').value;
@@ -296,7 +293,7 @@ input, select { display:block; width:250px; margin:10px auto; padding:8px; borde
     document.getElementById('reviewRating').value=''; document.getElementById('reviewGame').value='';
   }
 
-  // Варианты показать/скрыть окна
+  // --- Функции показать/скрыть окна и всё остальное ---
   function showModal() {
     document.getElementById('modalOverlay').style.display='flex';
   }
